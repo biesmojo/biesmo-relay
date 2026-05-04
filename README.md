@@ -2,8 +2,7 @@
 
 AI-native CRM and event-driven workflow platform. Agents handle conversations with tools (KB lookup, ticket creation), rules fire actions (Telegram notifications), full admin dashboard for sessions/tickets/events.
 
-**Demo:** <YOUR_URL>
-**Loom:** <YOUR_LOOM_LINK>
+**Demo:** <https://biesmo-relay1.vercel.app>
 
 ## Tech Stack
 
