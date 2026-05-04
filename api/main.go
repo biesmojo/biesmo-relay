@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"log"
 	"net/http"
 	"os"
@@ -10,9 +11,23 @@ import (
 	"github.com/go-chi/cors"
 	"github.com/joho/godotenv"
 
+	"relay/api/agent"
 	"relay/api/db"
+	"relay/api/handlers"
 	"relay/api/middleware"
 )
+
+func RespondJSON(w http.ResponseWriter, status int, v interface{}) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(v)
+}
+
+func RespondError(w http.ResponseWriter, status int, msg string) {
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(status)
+	json.NewEncoder(w).Encode(map[string]string{"error": msg})
+}
 
 func stub(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Content-Type", "application/json")
@@ -39,24 +54,28 @@ func main() {
 	}))
 
 	// Public routes
-r.Post("/api/events", handlers.EventsHandler(db.Pool))
-r.Get("/api/sessions", stub)
-r.Get("/api/sessions/{id}", stub)
-r.Get("/api/tickets", stub)
-r.Post("/api/chat", agent.ChatHandler(db.Pool))
-r.Get("/api/kb/search", stub)
+	r.Post("/api/events", handlers.EventsHandler(db.Pool))
+	r.Get("/api/sessions", stub)
+	r.Get("/api/sessions/{id}", stub)
+	r.Get("/api/tickets", stub)
+	r.Post("/api/chat", agent.ChatHandler(db.Pool))
+	r.Get("/api/kb/search", stub)
 
 	// Admin protected
-r.Group(func(r chi.Router) {
+	r.Group(func(r chi.Router) {
 		r.Use(middleware.AdminAuth)
 		r.Get("/api/admin/events", handlers.AdminEventsHandler(db.Pool))
 	})
 
 	// Health
 	r.Get("/health", func(w http.ResponseWriter, r *http.Request) {
+		dbStatus := "disconnected"
+		if db.Pool != nil {
+			dbStatus = "connected"
+		}
 		w.Header().Set("Content-Type", "application/json")
 		w.WriteHeader(http.StatusOK)
-		w.Write([]byte(`{"status": "healthy", "db": "` + (if db.Pool != nil "connected" "disconnected") + `"}`))
+		w.Write([]byte(`{"status": "healthy", "db": "` + dbStatus + `"}`))
 	})
 
 	port := os.Getenv("PORT")
@@ -66,4 +85,3 @@ r.Group(func(r chi.Router) {
 	log.Printf("Server starting on :%s", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
 }
-

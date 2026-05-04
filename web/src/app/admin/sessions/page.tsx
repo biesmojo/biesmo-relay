@@ -14,7 +14,7 @@ interface Session {
 export default function SessionsPage() {
   const [sessions, setSessions] = useState<Session[]>([]);
   const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [error, setError] = useState<string | null>(null);
   const [filter, setFilter] = useState('');
 
   useEffect(() => {
@@ -27,12 +27,13 @@ export default function SessionsPage() {
       if (!res.ok) throw new Error('Gagal memuat sesi');
       const data = await res.json();
       setSessions(data);
-    } catch (err) {
-      setError(err.message);
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Unknown error');
     } finally {
       setLoading(false);
     }
   };
+
 
   const filtered = sessions.filter(s =>
     s.status.includes(filter) || s.sentiment.includes(filter) || s.customer_name?.includes(filter)
@@ -69,7 +70,7 @@ export default function SessionsPage() {
               <td className="p-4 text-sm">{new Date(session.created_at).toLocaleString('id-ID')}</td>
             </tr>
           ))}
-          {filtered.length === 0 &amp;&amp; (
+{filtered.length === 0 && (
             <tr>
               <td colSpan={5} className="p-12 text-center text-gray-500">
                 Tidak ada sesi
@@ -78,7 +79,7 @@ export default function SessionsPage() {
           )}
         </tbody>
       </table>
-      {error &amp;&amp; <p className="text-red-500 mt-4">{error}</p>}
+{error && <p className="text-red-500 mt-4">{error}</p>}
     </div>
   );
 }

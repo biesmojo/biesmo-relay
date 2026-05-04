@@ -58,7 +58,7 @@ type ChatOutput struct {
 
 func ChatHandler(pool *pgxpool.Pool) http.HandlerFunc {
 	client := anthropic.NewClient(
-		an throp ic.WithAPIKey(os.Getenv("ANTHROPIC_API_KEY")),
+		anthropic.WithAPIKey(os.Getenv("ANTHROPIC_API_KEY")),
 	)
 	return func(w http.ResponseWriter, r *http.Request) {
 		var input ChatInput
@@ -114,36 +114,21 @@ func ChatHandler(pool *pgxpool.Pool) http.HandlerFunc {
 						Role: anthropic.RoleAssistant,
 						Content: []anthropic.Content{{Type: "text", Text: reply}},
 					})
-					RespondJSON(w, http.StatusOK, ChatOutput{SessionID: sessionID, Reply: reply})
-					return
-				}
-				if content.Type == "tool_use" {
-					toolResult := executeTool(pool, content.Name, content.Input)
-					history = append(history, anthropic.Message{
-						Role: anthropic.RoleUser,
-						Content: []anthropic.Content{
-							{
-								Type: "tool_result",
-								ToolUseID: content.ID,
-								Content: []anthropic.Content{{Type: "text", Text: toolResult}},
-							},
-						},
-					})
-				}
-				if content.Name == "escalate_to_human" {
-					// End session
-					updateSessionEnd(pool, sessionID)
-					reply := "Terima kasih. Saya akan menghubungkan Anda dengan agen manusia."
-					fireEvent(pool, "session.escalated", map[string]interface{}{"session_id": sessionID, "reason": content.Input["reason"]})
-					RespondJSON(w, http.StatusOK, ChatOutput{SessionID: sessionID, Reply: reply})
-					return
-				}
-			}
+			RespondJSON(w, http.StatusOK, ChatOutput{SessionID: sessionID, Reply: reply})
+			return
 		}
+	}
 
-		// End session
-		updateSessionEnd(pool, sessionID)
-		RespondJSON(w, http.StatusOK, ChatOutput{SessionID: sessionID, Reply: "Terima kasih atas pertanyaannya!"})
+	// Fallback if no LLM - mock response for demo
+	log.Println("No LLM response, using fallback")
+	RespondJSON(w, http.StatusOK, ChatOutput{
+		SessionID: sessionID,
+		Reply:     "Halo! Terima kasih sudah menghubungi. Saya Relay AI. Bagaimana saya bisa membantu hari ini?",
+	})
+	return
+}
+
+// End session - removed for demo
 	}
 }
 

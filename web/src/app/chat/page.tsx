@@ -11,6 +11,7 @@ export default function ChatPage() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [sessionId, setSessionId] = useState<string | null>(null);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const scrollToBottom = () => {
@@ -29,10 +30,12 @@ export default function ChatPage() {
     setInput('');
     setIsLoading(true);
 
-    // Simulate AI response
-const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
-      const body = { message: input };
-      if (sessionId) body.session_id = sessionId;
+    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+    const body: { message: string; session_id?: string; customer_phone?: string | null } = { 
+      message: input, 
+      customer_phone: null 
+    };
+    if (sessionId) body.session_id = sessionId;
 
       try {
         const res = await fetch(`${apiUrl}/api/chat`, {
@@ -44,8 +47,9 @@ const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
         const data = await res.json();
         setMessages((prev) => [...prev, { role: 'agent', content: data.reply }]);
         setSessionId(data.session_id);
-      } catch (err) {
-        setMessages((prev) => [...prev, { role: 'agent', content: `Maaf, terjadi kesalahan: ${err.message}` }]);
+      } catch (err: unknown) {
+        const errorMessage = err instanceof Error ? err.message : 'Unknown error occurred';
+        setMessages((prev) => [...prev, { role: 'agent', content: `Maaf, terjadi kesalahan: ${errorMessage}` }]);
       }
       setIsLoading(false);
   };
