@@ -6,16 +6,16 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/gorilla/mux"
+	"github.com/go-chi/chi/v5"
 )
 
 // Customer represents a CRM customer
 type Customer struct {
-	ID        int64     `json:"id"`
-	Name      string    `json:"name"`
-	Email     string    `json:"email"`
-	Phone     string    `json:"phone"`
-	CreatedAt string   `json:"created_at"`
+	ID        int64  `json:"id"`
+	Name      string `json:"name"`
+	Email     string `json:"email"`
+	Phone     string `json:"phone"`
+	CreatedAt string `json:"created_at"`
 }
 
 // GetCustomers lists all customers
@@ -79,8 +79,7 @@ func CreateCustomer(db *sql.DB) http.HandlerFunc {
 // GetCustomerByID gets single customer
 func GetCustomerByID(db *sql.DB) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		vars := mux.Vars(r)
-		idStr := vars["id"]
+		idStr := chi.URLParam(r, "id")
 		var id int64
 		fmt.Sscanf(idStr, "%d", &id)
 		if db == nil {
