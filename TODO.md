@@ -1,37 +1,16 @@
-# Relay Take-Home TODO
+# Relay Landing Page Implementation TODO
 
-## Phase 0: Setup & Fixes
-- [ ] Fix migrations/001_initial_schema.sql (JSONB seeds)
-- [ ] docker-compose.yml + .env.example (Postgres)
-- [ ] execute docker-compose up (verify DB/seeds)
-- [x] Add Gorilla Mux + basic customers handler / main mux update ✅
-- [ ] Implement Phase 1 handlers
+## Approved Plan Breakdown
+**Files to Edit**:
+- web/src/app/page.tsx (replace default with Relay landing)
+- web/src/app/layout.tsx (update metadata)
 
-## Phase 1: CRM Core
-- [ ] CRUD handlers: customers, sessions, messages, tickets, KB
-- [ ] Web chat UI (/chat)
-- [ ] Admin UI (/admin/sessions)
-- [ ] Auto-ticket stub
+**Steps**:
+- [x] Step 1: Update layout.tsx metadata
+- [x] Step 2: Replace page.tsx with custom Relay landing page
+- [x] Step 3: Verify changes (npm run dev in web/)
+- [x] Step 4: Lint check
+- [x] Step 5: Complete task
 
-## Phase 2: Event + Rule Layer
-- [ ] /api/events + evaluator
-- [ ] 2 rules working
-- [ ] Idempotency/retry/audit
-- [ ] Admin events explorer
-
-## Phase 3: AI Agent
-- [ ] Tools + multi-turn /api/chat
-- [ ] Session artifacts
-- [ ] Fallback/handoff
-- [ ] Agent evals/tests
-
-## Phase 4: Multi-channel
-- [ ] Resend email delivery
-- [ ] Event explorer UI
-
-## Docs & Ship
-- [x] DESIGN.md ✅
-- [x] AI_LOG.md ✅
-- [x] README.md ✅
-- [ ] Deploy/Loom
+**Landing page implementation complete!**
 

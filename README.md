@@ -1,103 +1,67 @@
-# Relay — AI-Native CRM (Vertical Slice)
+# Relay
 
-A minimal vertical slice of an AI-native CRM × event-driven workflow platform.
+Relay is a small vertical slice of an AI-native CRM, event-driven workflow engine, and AI agent system.
 
-This project demonstrates:
+It demonstrates:
 
-* Web chat → AI agent reply (with tools)
-* KB retrieval into responses
-* Auto ticket creation via rules
-* Event-driven rule engine with idempotency + retries
-* Admin visibility (sessions, tickets, events)
+- CRM primitives: customers, sessions, tickets, and messages
+- An event ingestion and rule engine
+- A tool-using AI agent for inbound web chat
+- Outbound delivery through a non-web channel
+- An admin UI for reviewing sessions, tickets, and events
 
----
+## Demo
 
-## 🚀 Demo
+- Live demo: <YOUR_DEPLOYED_URL>
+- Loom walkthrough: <YOUR_LOOM_URL>
 
-* Live URL: <YOUR_URL>
-* Loom walkthrough (≤7 min): <YOUR_LOOM_LINK>
+## Architecture
 
----
+- Backend: Go
+- Frontend: React
+- Database: PostgreSQL
+- AI provider: <YOUR_LLM_PROVIDER>
+- Non-web channel: <WhatsApp / Telegram / Email>
 
-## 🧱 Tech Stack
+See [DESIGN.md](./DESIGN.md) for the architecture decision, tradeoffs, and scope cuts.
 
-* Backend: Go (chi + PostgreSQL)
-* Frontend: React (Next.js)
-* DB: Postgres (Supabase)
-* LLM: Claude Sonnet (tool-using agent)
+## Features
 
----
+### CRM Core
+- Customer records
+- Chat sessions
+- Tickets
+- Message history
+- Session transcript view in admin UI
 
-## ⚡ Quick Start (local, <5 min)
+### Event + Rule Engine
+- `POST /events` endpoint
+- Persistent event storage
+- Rule matching and action execution
+- Idempotency protection
+- Retry with exponential backoff
+- Delivery state tracking
+- Audit trail for rule firing
 
-### 1. Clone repo
+### AI Agent
+- Inbound web chat handling
+- Tool calling for:
+  - customer lookup
+  - KB search
+  - ticket creation
+  - human escalation
+- Session summary in Bahasa Indonesia
+- Sentiment classification
+- Predicted CSAT scoring
 
-```
-git clone <repo-url>
-cd relay
-```
+### Admin UI
+- Session list
+- Session detail page
+- Linked ticket visibility
+- Event explorer
 
-### 2. Setup env
+## Project Structure
 
-```
-cp .env.example .env
-```
-
-Fill:
-
-* DATABASE_URL
-* LLM_API_KEY
-
----
-
-### 3. Run backend
-
-```
-cd api
-go run main.go
-```
-
----
-
-### 4. Run frontend
-
-```
-cd web
-npm install
-npm run dev
-```
-
----
-
-Open:
-
-* Chat: http://localhost:3000/chat
-* Admin: http://localhost:3000/admin
-
----
-
-## 🔁 Happy Path (what to test)
-
-1. User sends message in `/chat`
-2. Agent:
-
-   * retrieves KB
-   * responds in Bahasa Indonesia
-3. Negative sentiment → ticket created
-4. Rule triggers outbound message
-5. Check `/admin/events` for rule execution
-
----
-
-## 📂 Docs
-
-* Architecture & decisions → `DESIGN.md`
-* AI workflow & prompts → `AI_LOG.md`
-
----
-
-## ⚠️ Notes
-
-* Auth is mocked (single admin)
-* Some channels simulated except one real integration (email/Telegram)
-* Focus is on agent + rule engine reliability, not UI polish
+```txt
+/api    # Go backend
+/web    # React frontend
