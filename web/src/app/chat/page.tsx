@@ -30,16 +30,24 @@ export default function ChatPage() {
     setIsLoading(true);
 
     // Simulate AI response
-    setTimeout(() => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          role: 'agent',
-          content: 'Halo! Saya Relay AI Agent. Bagaimana saya bisa membantu Anda hari ini? (Mock - integrasi API nanti)',
-        },
-      ]);
+const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8080';
+      const body = { message: input };
+      if (sessionId) body.session_id = sessionId;
+
+      try {
+        const res = await fetch(`${apiUrl}/api/chat`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(body),
+        });
+        if (!res.ok) throw new Error('API error');
+        const data = await res.json();
+        setMessages((prev) => [...prev, { role: 'agent', content: data.reply }]);
+        setSessionId(data.session_id);
+      } catch (err) {
+        setMessages((prev) => [...prev, { role: 'agent', content: `Maaf, terjadi kesalahan: ${err.message}` }]);
+      }
       setIsLoading(false);
-    }, 1000);
   };
 
   const handleKeyPress = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {

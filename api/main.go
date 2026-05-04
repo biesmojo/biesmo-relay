@@ -39,17 +39,17 @@ func main() {
 	}))
 
 	// Public routes
-	r.Post("/api/events", stub)
-	r.Get("/api/sessions", stub)
-	r.Get("/api/sessions/{id}", stub)
-	r.Get("/api/tickets", stub)
-	r.Post("/api/chat", stub)
-	r.Get("/api/kb/search", stub)
+r.Post("/api/events", handlers.EventsHandler(db.Pool))
+r.Get("/api/sessions", stub)
+r.Get("/api/sessions/{id}", stub)
+r.Get("/api/tickets", stub)
+r.Post("/api/chat", agent.ChatHandler(db.Pool))
+r.Get("/api/kb/search", stub)
 
 	// Admin protected
-	r.Group(func(r chi.Router) {
+r.Group(func(r chi.Router) {
 		r.Use(middleware.AdminAuth)
-		r.Get("/api/admin/events", stub)
+		r.Get("/api/admin/events", handlers.AdminEventsHandler(db.Pool))
 	})
 
 	// Health

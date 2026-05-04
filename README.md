@@ -1,67 +1,46 @@
 # Relay
 
-Relay is a small vertical slice of an AI-native CRM, event-driven workflow engine, and AI agent system.
+AI-native CRM and event-driven workflow platform. Agents handle conversations with tools (KB lookup, ticket creation), rules fire actions (Telegram notifications), full admin dashboard for sessions/tickets/events.
 
-It demonstrates:
+**Demo:** <YOUR_URL>
+**Loom:** <YOUR_LOOM_LINK>
 
-- CRM primitives: customers, sessions, tickets, and messages
-- An event ingestion and rule engine
-- A tool-using AI agent for inbound web chat
-- Outbound delivery through a non-web channel
-- An admin UI for reviewing sessions, tickets, and events
+## Tech Stack
 
-## Demo
+| Component | Technology |
+| --- | --- |
+| Backend | Go + Chi + pgx + Supabase Postgres |
+| Frontend | Next.js 14 App Router + Tailwind + TypeScript |
+| AI | Anthropic Claude 3.5 Sonnet (tools) |
+| Events | Postgres events + rules + deliveries |
+| Channel | Telegram Bot API (outbound) |
 
-- Live demo: <YOUR_DEPLOYED_URL>
-- Loom walkthrough: <YOUR_LOOM_URL>
+## Quick Start (<5 min local)
 
-## Architecture
+```bash
+git clone <repo>
+cp .env.example .env # fill Supabase DATABASE_URL, Anthropic API key, Telegram BOT_TOKEN/CHAT_ID, ADMIN_TOKEN
+cd api && go mod tidy && go run main.go # :8080
+# (optional: psql DATABASE_URL -f api/db/schema.sql -f api/db/seed.sql)
+cd ../web && npm i && npm run dev # :3000
+```
 
-- Backend: Go
-- Frontend: React
-- Database: PostgreSQL
-- AI provider: <YOUR_LLM_PROVIDER>
-- Non-web channel: <WhatsApp / Telegram / Email>
+## Happy Path Test
 
-See [DESIGN.md](./DESIGN.md) for the architecture decision, tradeoffs, and scope cuts.
+1. Backend running
+2. Frontend /admin/events
+3. POST /api/events (curl or Postman):
+```json
+{
+  "type": "ticket.overdue",
+  "source": "system",
+  "idempotency_key": "test1",
+  "payload": {"customer_id": 1, "channel": "telegram"}
+}
+```
+4. Refresh /admin/events → see row status=sent/green
+5. Telegram test chat receives notification
+6. /chat → AI agent replies Bahasa, tools work
 
-## Features
+See DESIGN.md for architecture, AI_LOG.md for agent prompt/debug.
 
-### CRM Core
-- Customer records
-- Chat sessions
-- Tickets
-- Message history
-- Session transcript view in admin UI
-
-### Event + Rule Engine
-- `POST /events` endpoint
-- Persistent event storage
-- Rule matching and action execution
-- Idempotency protection
-- Retry with exponential backoff
-- Delivery state tracking
-- Audit trail for rule firing
-
-### AI Agent
-- Inbound web chat handling
-- Tool calling for:
-  - customer lookup
-  - KB search
-  - ticket creation
-  - human escalation
-- Session summary in Bahasa Indonesia
-- Sentiment classification
-- Predicted CSAT scoring
-
-### Admin UI
-- Session list
-- Session detail page
-- Linked ticket visibility
-- Event explorer
-
-## Project Structure
-
-```txt
-/api    # Go backend
-/web    # React frontend

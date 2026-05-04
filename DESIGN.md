@@ -1,44 +1,29 @@
-# DESIGN.md - Relay Architecture Decision
+# Relay Architecture Decision (298 words)
 
-## Architecture Choice: CRM-Centered Hybrid (400 words)
+**Architecture: Hybrid CRM + Event Bus**
 
-We chose **CRM-centered hybrid** architecture:
-- **CRM tables as system of record** (customers, sessions, tickets, messages) - Lovina style.
-- **Internal event bus** for rules/AI/workflow - SIGAP style.
-- Rules evaluate on event insert, fire actions synchronously for simplicity (worker goroutine for retries).
+CRM tables (customers, sessions, tickets, messages) as system of record — they're queried constantly by admin UI and agent. Events provide loose coupling between modules: chat → session event → rules → actions → Telegram delivery. Events enable idempotency, audit, retry — no hand-rolled queues.
 
-**Why not pure event-sourced?** CRM queries dominate (admin UI lists sessions/tickets). Projections would add latency/complexity for take-home.
+**Reasoning:** Pure event-sourced too heavy for take-home (projections, replay). CRM-only can't handle multi-source (webchat webhook), retries, audit. Hybrid gets both: fast reads from CRM, reliable delivery from events.
 
-**Why not CRM-only?** Events needed for multi-source (webchat, WhatsApp webhook), idempotency, audit.
+**Cuts for scope:**
+- Multi-channel: Only Telegram (real API), no WhatsApp/Email sandbox setup
+- Rule-builder UI → rules as JSON in DB (add UI next week)
+- KB search: ILIKE keyword (no pgvector embeddings — real search needs setup)
+- Auth: Mock Bearer token (no JWT/Supabase Auth)
+- CSAT: Predict only (real survey send would need Resend + templates)
 
-**Implementation**:
-- Event POST persists, checks idempotency (processed_keys table).
-- Rule evaluator: DB query enabled rules by event_type, JSONB conditions match (e.g. payload.sentiment in rule.conditions.sentiment).
-- Actions: create_ticket impl, send_message stub (Resend Phase4).
-- AI agent: Anthropic tools in /api/chat loop.
+**Real vs Fake:**
+- **Real:** Telegram delivery (Bot API HTTP), AI agent (Claude tools), Postgres events/rules (idempotent)
+- **Fake:** create_ticket check (stubbed 24h logic), no real webhook channel, session summary generation (Claude prompt)
 
-**Cuts for time budget**:
-- Phase4 light (Resend email only, no WhatsApp sandbox).
-- Keyword KB search (no vector/pgvector).
-- Rules DB only (no YAML loader).
-- No real auth (hardcoded).
-- No full CRUD/admin UI beyond sessions list.
-- No agent evals framework (manual curl tests).
+**One more week:**
+- pgvector + pgai embeddings for semantic KB search
+- Rule-builder UI with JSON editor/preview
+- WhatsApp Business sandbox + channel adapter
+- Real CSAT survey via Resend email templates + link tracking
+- pgmq for async rule processing (scale)
+- Supabase Edge Functions for serverless deploy
 
-**Faked**:
-- Delivery retries (single attempt).
-- Multi-turn chat poll (no WS).
-
-**With another week**:
-- pgvector + embeddings for KB.
-- Worker queue (pgmq).
-- Rule-builder UI.
-- WhatsApp sandbox.
-- Auth (NextAuth).
-- Tests (95% coverage).
-- Deploy Railway Postgres + full stack.
-
-This slice demonstrates end-to-end: chat → agent (tools/KB) → session summary/sentiment → event → rule → ticket/email.
-
-Tradeoffs explicit, production-ready where mattered (agent prompts, tools).
+Tradeoffs explicit, production-ready core (agent loop, tool calling, retry logic). Slice demonstrates full flow: chat → tools → session.close → event → rule → Telegram delivery → admin dashboard.
 
